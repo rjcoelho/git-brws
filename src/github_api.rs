@@ -71,8 +71,9 @@ impl<'a> Client<'a> {
         })
     }
 
-    pub async fn send(&self, mut req: RequestBuilder) -> Result<Response> {
-        req = req.header(header::ACCEPT, "application/vnd.github.v3+json");
+    pub async fn send(&self, mut req: RequestBuilder, accept: Option<&'_ str>) -> Result<Response> {
+        let accept = accept.unwrap_or("application/vnd.github.v3+json");
+        req = req.header(header::ACCEPT, accept);
         if let Some(token) = &self.token {
             req = req.header(header::AUTHORIZATION, token);
         }
@@ -108,7 +109,7 @@ impl<'a> Client<'a> {
         let params = [("q", query.as_str()), ("sort", "updated")];
         let url = format!("https://{}/search/issues", self.endpoint);
         let req = self.client.get(url.as_str()).query(&params);
-        let res = self.send(req).await?;
+        let res = self.send(req, None).await?;
         let mut issues: Issues = res.json().await?;
 
         if issues.items.is_empty() {
@@ -128,7 +129,7 @@ impl<'a> Client<'a> {
         let repo = repo.as_ref();
         let url = format!("https://{}/repos/{}/{}", self.endpoint, author, repo);
         let req = self.client.get(url.as_str());
-        let res = self.send(req).await?;
+        let res = self.send(req, None).await?;
         let repo: Repo = res.json().await?;
         Ok(repo)
     }
@@ -140,7 +141,11 @@ impl<'a> Client<'a> {
         let params = [("q", query.as_str()), ("per_page", "1")];
         let url = format!("https://{}/search/repositories", self.endpoint);
         let req = self.client.get(&url).query(&params);
-        let res = self.send(req).await?;
+        // Note: Search repositories API requires special accept header
+        //   ref: https://developer.github.com/v3/search/#search-repositories
+        let res = self
+            .send(req, Some("application/vnd.github.mercy-preview+json"))
+            .await?;
         let mut results: SearchResults = res.json().await?;
 
         if results.items.is_empty() {
@@ -159,7 +164,7 @@ impl<'a> Client<'a> {
         let repo = repo.as_ref();
         let url = format!("https://{}/repos/{}/{}", self.endpoint, owner, repo);
         let req = self.client.get(url.as_str());
-        let res = self.send(req).await?;
+        let res = self.send(req, None).await?;
         let repo: RepoForHomepage = res.json().await?;
         Ok(repo.homepage)
     }
