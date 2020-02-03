@@ -44,7 +44,7 @@ struct RepoForHomepage {
 
 pub struct Client<'a> {
     client: ReqwestClient,
-    token: Option<&'a str>,
+    token: Option<String>,
     endpoint: &'a str,
 }
 
@@ -66,7 +66,7 @@ impl<'a> Client<'a> {
 
         Ok(Self {
             client: b.build()?,
-            token: token.as_ref().map(AsRef::as_ref),
+            token: token.as_ref().map(|t| format!("token {}", t.as_ref())),
             endpoint,
         })
     }
@@ -74,7 +74,7 @@ impl<'a> Client<'a> {
     pub async fn send(&self, mut req: RequestBuilder) -> Result<Response> {
         req = req.header(header::ACCEPT, "application/vnd.github.v3+json");
         if let Some(token) = &self.token {
-            req = req.bearer_auth(token);
+            req = req.header(header::AUTHORIZATION, token);
         }
 
         let res = req.send().await?;
