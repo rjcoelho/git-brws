@@ -1,0 +1,32 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - name: Install Rust via Rustup
+        run: |
+          rustup update stable
+          rustup default stable
+          rustc -V
+          cargo -V
+      - uses: actions/checkout@v2
+      - name: Set Git user for running Git commands in unit tests
+        run: |
+          git config --global user.email "users@noreply.github.com"
+          git config --global user.name "github-action"
+      - name: Fetch Git history for unit tests
+        run: |
+          git fetch --prune --unshallow
+          git fetch origin master:master
+      - name: Run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo test --verbose
