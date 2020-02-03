@@ -42,7 +42,7 @@ impl<'a> Git<'a> {
     pub fn tag_hash<S: AsRef<str>>(&self, tagname: S) -> Result<String> {
         let tagname = tagname.as_ref();
         let stdout = self
-            .command(&["show-ref", "--tags", tagname])
+            .command(&["show-ref", "--tags", tagname, "--"])
             .map_err(|err| Error::GitObjectNotFound {
                 kind: "tag name",
                 object: tagname.to_string(),
