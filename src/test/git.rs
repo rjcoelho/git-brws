@@ -75,7 +75,7 @@ fn git_get_remote_url() {
         u
     );
     assert!(u.contains("git-brws"), "invalid url: {:?}", u);
-    assert!(u.ends_with(".git"), "invalid url: {:?}", u);
+    // .git may not exist because GitHub allows omitting .git suffix in https Git URL
 }
 
 #[test]
@@ -99,5 +99,9 @@ fn git_check_remote_contains() {
     let g = Git::new(".git".as_ref(), "git");
     let h = g.tag_hash("0.10.1").unwrap();
     let b = g.remote_contains(&h, "origin/master").unwrap();
-    assert!(b);
+    assert!(
+        b,
+        "Hash {} is not included in remote branch origin/master",
+        &h
+    );
 }
