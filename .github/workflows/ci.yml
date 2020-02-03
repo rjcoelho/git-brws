@@ -7,6 +7,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+      # /search/* GitHub API is limited to 30/min so executing jobs parallelly
+      # exceeds the rate limit
+      max-parallel: 1
     runs-on: ${{ matrix.os }}
     env:
       RUST_BACKTRACE: full
