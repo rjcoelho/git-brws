@@ -7,9 +7,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-      # /search/* GitHub API is limited to 30/min so executing jobs parallelly
-      # exceeds the rate limit
-      max-parallel: 1
     runs-on: ${{ matrix.os }}
     env:
       RUST_BACKTRACE: full
@@ -29,6 +26,9 @@ jobs:
         run: |
           git fetch --prune --unshallow
           git fetch origin master:master
+      - name: Show warning
+        if: matrix.os != 'ubuntu-latest'
+        run: echo "::warning file=src/test/helper.rs::Skipping tests for GitHub API on this platform due to rate limit. git-brws uses GitHub search API but it has special rate limit 30/min and running jobs parallelly hits the limit"
       - name: Run tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
