@@ -1,5 +1,6 @@
 use crate::argv::*;
 use crate::error::Error;
+use crate::test::helper::GIT_DIR;
 use std::env;
 use std::fs;
 
@@ -187,13 +188,11 @@ fn unknown_options() {
 
 #[test]
 fn detect_git_dir() {
-    let current = fs::canonicalize(env::current_dir().unwrap()).unwrap();
-    let p = current.join("src").join("test");
+    let p = fs::canonicalize(env::current_dir().unwrap())
+        .unwrap()
+        .join("src/test");
     match Parsed::from_iter(&["git-brws", "-d", p.to_str().unwrap()]).unwrap() {
-        Parsed::OpenPage(c) => {
-            let expected = Some(current.join(".git"));
-            assert_eq!(c.git_dir, expected);
-        }
+        Parsed::OpenPage(c) => assert_eq!(c.git_dir, Some(GIT_DIR.clone())),
         p => assert!(false, "{:?}", p),
     }
 }

@@ -1,18 +1,14 @@
 use crate::config::Config;
 use crate::error::Error;
 use crate::page::{parse_page, DiffOp, Line, Page};
-use crate::test::helper::empty_env;
-use std::fs;
+use crate::test::helper::{empty_env, GIT_DIR};
 use std::path::{Path, PathBuf};
 
 fn config(repo: &str, branch: Option<&str>, args: Vec<&str>) -> Config {
-    let mut dir = std::env::current_dir().unwrap();
-    dir.push(Path::new(".git"));
-    let dir = fs::canonicalize(dir).unwrap();
     Config {
         repo_url: repo.to_string(),
         branch: branch.map(|s| s.to_string()),
-        git_dir: Some(dir),
+        git_dir: Some(GIT_DIR.clone()),
         args: args.into_iter().map(String::from).collect(),
         stdout: false,
         pull_request: false,

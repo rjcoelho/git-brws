@@ -178,5 +178,20 @@ pub fn git_dir<P: AsRef<Path>>(dir: Option<P>, git_cmd: &str) -> Result<PathBuf>
         .expect("Invalid UTF-8 sequence in stdout of git command")
         .trim();
 
-    Ok(Path::new(stdout).canonicalize()?)
+    // Note: .canonicalize() should not be used for the path.
+    // .canonicalize() uses '\\?...' path (extended path length) but it is not supported by gitdir.
+    // On Windows, gitdir is not a file path actually. It is a kind of slash-path:
+    //
+    // ```
+    // > git rev-parse --absolute-git-dir
+    // D:/a/git-brws/git-brws/.git
+    // ```
+    //
+    // It seems that D:\a\git-brws\git-brws\.git is also ok. But \\?\D:\a\git-brws\git-brws\.git is
+    // not available on some version of Windows. Actually it was OK on my local Windows machine but
+    // not OK on GitHub Action's Windows worker.
+    //
+    // Anyway, we use `git rev-parse --absolute-git-dir` so the output should be absolute path. So
+    // I believe .canonicalize() is not necessary here.
+    Ok(PathBuf::from(stdout))
 }

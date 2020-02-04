@@ -1,5 +1,20 @@
 use crate::config::EnvConfig;
 use std::env;
+use std::path::PathBuf;
+use std::process::Command;
+use std::str;
+
+lazy_static! {
+    pub static ref GIT_DIR: PathBuf = {
+        let output = Command::new("git")
+            .arg("rev-parse")
+            .arg("--absolute-git-dir")
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+        PathBuf::from(str::from_utf8(&output.stdout).unwrap().trim())
+    };
+}
 
 pub fn empty_env() -> EnvConfig {
     EnvConfig {
